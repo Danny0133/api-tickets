@@ -11,9 +11,25 @@ use Illuminate\Http\Request;
 class TicketController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = Ticket::all();
+        $query = Ticket::query();
+
+        if ($request->has('status') && $request->status !== '' && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('priority') && $request->priority !== '' && $request->priority !== 'all') {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where('title', 'LIKE', '%' . $request->search . '%');
+        }
+
+        $tickets = $query->orderBy('created_at', 'desc')
+                        ->paginate(10);
+
         return TicketResource::collection($tickets);
     }
 
